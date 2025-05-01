@@ -108,8 +108,8 @@ CREATE TABLE `User`(
     `Last_name` VARCHAR(255) NOT NULL,
     `Birthday` DATE NOT NULL,
     `Phone_number` VARCHAR(255) NOT NULL,
-	`Address` varchar(255) NOT NULL,
-	`Email` VARCHAR(255) NOT NULL,
+    `Address` varchar(255) NOT NULL,
+    `Email` VARCHAR(255) NOT NULL,
     `Password` VARCHAR(255) NOT NULL,
     `Created_at` TIMESTAMP NOT NULL,
     `Updated_at` TIMESTAMP NOT NULL
