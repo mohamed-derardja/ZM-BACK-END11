@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ZmBackEndApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(ZmBackEndApplication.class, args);
     }
 
