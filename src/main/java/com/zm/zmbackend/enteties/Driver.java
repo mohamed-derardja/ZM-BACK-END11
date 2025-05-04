@@ -1,4 +1,4 @@
-package com.zm.zmbackend;
+package com.zm.zmbackend.enteties;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
