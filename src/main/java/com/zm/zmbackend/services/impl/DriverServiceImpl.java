@@ -1,0 +1,92 @@
+package com.zm.zmbackend.services.impl;
+
+import com.zm.zmbackend.enteties.Driver;
+import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.repositories.DriverRepo;
+import com.zm.zmbackend.repositories.ReservationRepo;
+import com.zm.zmbackend.services.DriverService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class DriverServiceImpl implements DriverService {
+
+    private final DriverRepo driverRepo;
+    private final ReservationRepo reservationRepo;
+
+    @Autowired
+    public DriverServiceImpl(DriverRepo driverRepo, ReservationRepo reservationRepo) {
+        this.driverRepo = driverRepo;
+        this.reservationRepo = reservationRepo;
+    }
+
+    @Override
+    public List<Driver> getAllDrivers() {
+        return driverRepo.findAll();
+    }
+
+    @Override
+    public Optional<Driver> getDriverById(Long id) {
+        return driverRepo.findById(id);
+    }
+
+    @Override
+    public Driver createDriver(Driver driver) {
+        return driverRepo.save(driver);
+    }
+
+    @Override
+    public Driver updateDriver(Long id, Driver driver) {
+        if (!driverRepo.existsById(id)) {
+            throw new RuntimeException("Driver not found with id: " + id);
+        }
+        driver.setId(id);
+        return driverRepo.save(driver);
+    }
+
+    @Override
+    public void deleteDriver(Long id) {
+        if (!driverRepo.existsById(id)) {
+            throw new RuntimeException("Driver not found with id: " + id);
+        }
+        driverRepo.deleteById(id);
+    }
+
+    @Override
+    public List<Driver> getAvailableDrivers() {
+        return driverRepo.findByAvailabilityAndStatus(true, "Active");
+    }
+
+    @Override
+    public boolean isDriverAvailable(Long driverId, Instant startDate, Instant endDate) {
+        Optional<Driver> optionalDriver = driverRepo.findById(driverId);
+        if (optionalDriver.isEmpty()) {
+            throw new RuntimeException("Driver not found with id: " + driverId);
+        }
+
+        Driver driver = optionalDriver.get();
+        if (!driver.getAvailability() || !"Active".equals(driver.getStatus())) {
+            return false;
+        }
+
+        // Check if there are any overlapping reservations
+        List<Reservation> overlappingReservations = reservationRepo.findOverlappingReservationsForDriver(driverId, startDate, endDate);
+        return overlappingReservations.isEmpty();
+    }
+
+    @Override
+    public Driver updateDriverAvailability(Long driverId, Boolean availability) {
+        Optional<Driver> optionalDriver = driverRepo.findById(driverId);
+        if (optionalDriver.isEmpty()) {
+            throw new RuntimeException("Driver not found with id: " + driverId);
+        }
+
+        Driver driver = optionalDriver.get();
+        driver.setAvailability(availability);
+        return driverRepo.save(driver);
+    }
+}

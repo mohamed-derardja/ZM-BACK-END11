@@ -19,8 +19,9 @@ public class Payment {
     private Long id;
 
     @NotNull
-    @Column(name = "Reservation_ID", nullable = false)
-    private Long reservationId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "Reservation_ID", nullable = false)
+    private Reservation reservation;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
