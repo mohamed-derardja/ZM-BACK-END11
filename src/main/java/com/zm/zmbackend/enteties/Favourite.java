@@ -42,6 +42,7 @@ public class Favourite {
     @Table(name = "reservations")
     public static class Reservation {
         @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
         @Column(name = "Reservation_ID", nullable = false)
         private Long id;
 

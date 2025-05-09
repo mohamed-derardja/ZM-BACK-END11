@@ -1,5 +1,5 @@
 CREATE TABLE `user` (
-    `User_ID` BIGINT NOT NULL,
+    `User_ID` BIGINT NOT NULL AUTO_INCREMENT,
     `Picture` VARCHAR(255),
     `First_name` VARCHAR(255) NOT NULL,
     `Last_name` VARCHAR(255) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE `user` (
 );
 
 CREATE TABLE `car` (
-    `Car_ID` BIGINT NOT NULL,
+    `Car_ID` BIGINT NOT NULL AUTO_INCREMENT,
     `License_plate` VARCHAR(255) NOT NULL,
     `Description` TEXT NOT NULL,
     `Picture` VARCHAR(255) NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE `car` (
 );
 
 CREATE TABLE `driver` (
-    `Driver_ID` BIGINT NOT NULL,
+    `Driver_ID` BIGINT NOT NULL AUTO_INCREMENT,
     `Picture` VARCHAR(255) NOT NULL,
     `First_name` VARCHAR(255) NOT NULL,
     `Last_name` VARCHAR(255) NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE `favourites` (
 );
 
 CREATE TABLE `reservations` (
-    `Reservation_ID` BIGINT NOT NULL,
+    `Reservation_ID` BIGINT NOT NULL AUTO_INCREMENT,
     `Start_date` TIMESTAMP NOT NULL,
     `End_date` TIMESTAMP NOT NULL,
     `Car_ID` BIGINT NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE `reservations` (
 );
 
 CREATE TABLE `gallery` (
-    `Gallery_ID` BIGINT NOT NULL,
+    `Gallery_ID` BIGINT NOT NULL AUTO_INCREMENT,
     `Car_ID` BIGINT NOT NULL,
     `Image` VARCHAR(255) NOT NULL,
     `Created_at` TIMESTAMP NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE `gallery` (
 );
 
 CREATE TABLE `payments` (
-    `Payment_ID` BIGINT NOT NULL,
+    `Payment_ID` BIGINT NOT NULL AUTO_INCREMENT,
     `Reservation_ID` BIGINT NOT NULL,
     `User_ID` BIGINT NOT NULL,
     `amount` DECIMAL(8,2) NOT NULL,

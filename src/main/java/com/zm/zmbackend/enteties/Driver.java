@@ -17,6 +17,7 @@ import java.time.LocalDate;
 @Table(name = "driver")
 public class Driver {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Driver_ID", nullable = false)
     private Long id;
 
