@@ -57,11 +57,6 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public List<Driver> getAvailableDrivers() {
-        return driverRepo.findByAvailabilityAndStatus(true, "Active");
-    }
-
-    @Override
     public boolean isDriverAvailable(Long driverId, Instant startDate, Instant endDate) {
         Optional<Driver> optionalDriver = driverRepo.findById(driverId);
         if (optionalDriver.isEmpty()) {
@@ -79,7 +74,7 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public Driver updateDriverAvailability(Long driverId, Boolean availability) {
+    public void updateDriverAvailability(Long driverId, Boolean availability) {
         Optional<Driver> optionalDriver = driverRepo.findById(driverId);
         if (optionalDriver.isEmpty()) {
             throw new RuntimeException("Driver not found with id: " + driverId);
@@ -87,6 +82,6 @@ public class DriverServiceImpl implements DriverService {
 
         Driver driver = optionalDriver.get();
         driver.setAvailability(availability);
-        return driverRepo.save(driver);
+        driverRepo.save(driver);
     }
 }

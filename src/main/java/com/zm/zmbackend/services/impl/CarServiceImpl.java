@@ -79,7 +79,7 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Car updateCarStatus(Long carId, String status) {
+    public void updateCarStatus(Long carId, String status) {
         Optional<Car> optionalCar = carRepo.findById(carId);
         if (optionalCar.isEmpty()) {
             throw new RuntimeException("Car not found with id: " + carId);
@@ -87,6 +87,6 @@ public class CarServiceImpl implements CarService {
 
         Car car = optionalCar.get();
         car.setRentalStatus(status);
-        return carRepo.save(car);
+        carRepo.save(car);
     }
 }

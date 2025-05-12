@@ -13,7 +13,6 @@ public interface DriverService {
     void deleteDriver(Long id);
 
     // Business logic methods
-    List<Driver> getAvailableDrivers();
     boolean isDriverAvailable(Long driverId, Instant startDate, Instant endDate);
-    Driver updateDriverAvailability(Long driverId, Boolean availability);
+    void updateDriverAvailability(Long driverId, Boolean availability);
 }

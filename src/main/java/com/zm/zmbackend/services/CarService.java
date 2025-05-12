@@ -15,5 +15,5 @@ public interface CarService {
     // Business logic methods
     List<Car> getAvailableCars();
     boolean isCarAvailable(Long carId, Instant startDate, Instant endDate);
-    Car updateCarStatus(Long carId, String status);
+    void updateCarStatus(Long carId, String status);
 }

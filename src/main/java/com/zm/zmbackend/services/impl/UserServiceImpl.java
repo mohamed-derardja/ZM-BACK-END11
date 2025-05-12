@@ -6,7 +6,6 @@ import com.zm.zmbackend.entities.User;
 import com.zm.zmbackend.config.CancellationConfig;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.zm.zmbackend.repositories.CarRepo;
-import com.zm.zmbackend.repositories.ReservationRepo;
 import com.zm.zmbackend.repositories.UserRepo;
 import com.zm.zmbackend.services.CarService;
 import com.zm.zmbackend.services.ReservationService;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -27,7 +25,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepo userRepo;
     private final CarRepo carRepo;
-    private final ReservationRepo reservationRepo;
     private final CarService carService;
     private final ReservationService reservationService;
     private final CancellationConfig cancellationConfig;
@@ -50,12 +47,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Autowired
-    public UserServiceImpl(UserRepo userRepo, CarRepo carRepo, ReservationRepo reservationRepo, 
+    public UserServiceImpl(UserRepo userRepo, CarRepo carRepo,
                           CarService carService, ReservationService reservationService,
                           CancellationConfig cancellationConfig, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.carRepo = carRepo;
-        this.reservationRepo = reservationRepo;
         this.carService = carService;
         this.reservationService = reservationService;
         this.cancellationConfig = cancellationConfig;
@@ -235,11 +231,7 @@ public class UserServiceImpl implements UserService {
 
         // Calculate cancellation fee based on how close to the start time
         BigDecimal feePercentage;
-        try {
-            feePercentage = cancellationConfig.calculateCancellationFeePercentage(reservation.getStartDate(), now);
-        } catch (RuntimeException e) {
-            throw e; // Re-throw the exception from cancellationConfig
-        }
+        feePercentage = cancellationConfig.calculateCancellationFeePercentage(reservation.getStartDate(), now);
 
         BigDecimal cancellationFee = reservation.getFee().multiply(feePercentage);
 
@@ -452,7 +444,7 @@ public class UserServiceImpl implements UserService {
         Instant now = Instant.now();
 
         // Get or create the list of attempts for this user
-        List<Instant> attempts = reservationAttempts.computeIfAbsent(userId, k -> new ArrayList<>());
+        List<Instant> attempts = reservationAttempts.computeIfAbsent(userId, _ -> new ArrayList<>());
 
         // Remove attempts older than the rate limit window
         Instant cutoff = now.minus(RATE_LIMIT_WINDOW_MINUTES, ChronoUnit.MINUTES);

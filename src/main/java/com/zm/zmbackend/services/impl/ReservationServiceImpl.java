@@ -62,45 +62,34 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public Reservation createReservation(Reservation reservation) {
-        // Validate reservation dates
+        // Driver must not be set by user
+        if (reservation.getDriver() != null) {
+            throw new RuntimeException("Driver cannot be selected during reservation creation. It will be assigned by the admin.");
+        }
+
         if (!validateReservationDates(reservation.getStartDate(), reservation.getEndDate())) {
             throw new RuntimeException("Invalid reservation dates");
         }
 
-        // Check car availability
         if (!checkCarAvailability(reservation.getCar().getId(), reservation.getStartDate(), reservation.getEndDate())) {
             throw new RuntimeException("Car is not available for the selected dates");
         }
 
-        // Check driver availability if not self-drive
-        if (!reservation.getSelfDrive() && reservation.getDriver() != null) {
-            if (!checkDriverAvailability(reservation.getDriver().getId(), reservation.getStartDate(), reservation.getEndDate())) {
-                throw new RuntimeException("Driver is not available for the selected dates");
-            }
-        }
-
-        // Calculate fee
+        // Calculate fee without driver
         BigDecimal fee = calculateReservationFee(
-            reservation.getCar().getId(),
-            reservation.getDriver() != null ? reservation.getDriver().getId() : null,
-            reservation.getStartDate(),
-            reservation.getEndDate(),
-            reservation.getSelfDrive()
+                reservation.getCar().getId(),
+                null,
+                reservation.getStartDate(),
+                reservation.getEndDate(),
+                true
         );
         reservation.setFee(fee);
 
-        // Set initial status if not set
         if (reservation.getStatus() == null) {
             reservation.setStatus("Pending");
         }
 
-        // Update car status
         carService.updateCarStatus(reservation.getCar().getId(), "Reserved");
-
-        // Update driver availability if not self-drive
-        if (!reservation.getSelfDrive() && reservation.getDriver() != null) {
-            driverService.updateDriverAvailability(reservation.getDriver().getId(), false);
-        }
 
         return reservationRepo.save(reservation);
     }
@@ -114,66 +103,58 @@ public class ReservationServiceImpl implements ReservationService {
 
         Reservation existingReservation = existingReservationOpt.get();
 
-        // Check if dates have changed
         boolean datesChanged = !existingReservation.getStartDate().equals(reservation.getStartDate()) ||
-                              !existingReservation.getEndDate().equals(reservation.getEndDate());
+                !existingReservation.getEndDate().equals(reservation.getEndDate());
 
-        // Check if car has changed
         boolean carChanged = !existingReservation.getCar().getId().equals(reservation.getCar().getId());
 
-        // Check if driver has changed
-        boolean driverChanged = (existingReservation.getDriver() == null && reservation.getDriver() != null) ||
-                               (existingReservation.getDriver() != null && reservation.getDriver() == null) ||
-                               (existingReservation.getDriver() != null && reservation.getDriver() != null && 
-                                !existingReservation.getDriver().getId().equals(reservation.getDriver().getId()));
+        boolean driverRemoved = existingReservation.getDriver() != null && reservation.getSelfDrive();
+        boolean driverChanged = !reservation.getSelfDrive() && (
+                existingReservation.getDriver() == null ||
+                        (reservation.getDriver() != null &&
+                                !reservation.getDriver().getId().equals(existingReservation.getDriver().getId()))
+        );
 
-        // If dates, car, or driver has changed, validate availability
-        if (datesChanged || carChanged || driverChanged) {
-            // Validate reservation dates
+        if (driverChanged) {
+            throw new RuntimeException("Driver cannot be changed. You may only remove the driver (switch to self-drive).");
+        }
+
+        if (datesChanged || carChanged || driverRemoved) {
             if (!validateReservationDates(reservation.getStartDate(), reservation.getEndDate())) {
                 throw new RuntimeException("Invalid reservation dates");
             }
 
-            // Check car availability
             if (carChanged && !checkCarAvailability(reservation.getCar().getId(), reservation.getStartDate(), reservation.getEndDate())) {
                 throw new RuntimeException("Car is not available for the selected dates");
             }
 
-            // Check driver availability if not self-drive
-            if (!reservation.getSelfDrive() && reservation.getDriver() != null && 
-                (driverChanged || datesChanged) && 
-                !checkDriverAvailability(reservation.getDriver().getId(), reservation.getStartDate(), reservation.getEndDate())) {
-                throw new RuntimeException("Driver is not available for the selected dates");
+            if (!reservation.getSelfDrive() && existingReservation.getDriver() != null && datesChanged) {
+                if (!checkDriverAvailability(existingReservation.getDriver().getId(), reservation.getStartDate(), reservation.getEndDate())) {
+                    throw new RuntimeException("Driver is not available for the selected dates");
+                }
             }
 
-            // Recalculate fee
             BigDecimal fee = calculateReservationFee(
-                reservation.getCar().getId(),
-                reservation.getDriver() != null ? reservation.getDriver().getId() : null,
-                reservation.getStartDate(),
-                reservation.getEndDate(),
-                reservation.getSelfDrive()
+                    reservation.getCar().getId(),
+                    existingReservation.getDriver() != null ? existingReservation.getDriver().getId() : null,
+                    reservation.getStartDate(),
+                    reservation.getEndDate(),
+                    reservation.getSelfDrive() && existingReservation.getDriver() != null
             );
             reservation.setFee(fee);
 
-            // Update old car status if car has changed
             if (carChanged) {
                 carService.updateCarStatus(existingReservation.getCar().getId(), "Available");
                 carService.updateCarStatus(reservation.getCar().getId(), "Reserved");
             }
 
-            // Update old driver availability if driver has changed
-            if (driverChanged) {
-                if (existingReservation.getDriver() != null) {
-                    driverService.updateDriverAvailability(existingReservation.getDriver().getId(), true);
-                }
-                if (reservation.getDriver() != null && !reservation.getSelfDrive()) {
-                    driverService.updateDriverAvailability(reservation.getDriver().getId(), false);
-                }
+            if (driverRemoved) {
+                driverService.updateDriverAvailability(existingReservation.getDriver().getId(), true);
             }
         }
 
         reservation.setId(id);
+        reservation.setDriver(existingReservation.getDriver()); // Preserve original driver
         return reservationRepo.save(reservation);
     }
 
@@ -193,23 +174,17 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         Reservation reservation = optionalReservation.get();
-        String oldStatus = reservation.getStatus();
         reservation.setStatus(status);
 
-        // Update car and driver status based on reservation status
         if ("Approved".equals(status)) {
-            // When a reservation is approved, mark the car as reserved
             carService.updateCarStatus(reservation.getCar().getId(), "Reserved");
 
-            // If a driver is assigned and it's not self-drive, mark the driver as unavailable
             if (!reservation.getSelfDrive() && reservation.getDriver() != null) {
                 driverService.updateDriverAvailability(reservation.getDriver().getId(), false);
             }
         } else if ("Rejected".equals(status) || "Ended".equals(status)) {
-            // When a reservation is rejected or ended, mark the car as available
             carService.updateCarStatus(reservation.getCar().getId(), "Available");
 
-            // If a driver was assigned and it's not self-drive, mark the driver as available
             if (!reservation.getSelfDrive() && reservation.getDriver() != null) {
                 driverService.updateDriverAvailability(reservation.getDriver().getId(), true);
             }
@@ -220,19 +195,16 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public boolean validateReservationDates(Instant startDate, Instant endDate) {
-        // Check if start date is in the future
         if (startDate.isBefore(Instant.now())) {
             return false;
         }
 
-        // Check if end date is after start date
         if (endDate.isBefore(startDate)) {
             return false;
         }
 
-        // Check if the duration is reasonable (e.g., not more than 30 days)
         Duration duration = Duration.between(startDate, endDate);
-        return duration.toDays() <= 30;
+        return duration.toDays() <= 90;
     }
 
     @Override
@@ -243,7 +215,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public boolean checkDriverAvailability(Long driverId, Instant startDate, Instant endDate) {
         if (driverId == null) {
-            return true; // No driver requested, so availability check passes
+            return true;
         }
         return driverService.isDriverAvailable(driverId, startDate, endDate);
     }
@@ -258,22 +230,25 @@ public class ReservationServiceImpl implements ReservationService {
         Car car = optionalCar.get();
         BigDecimal fee = BigDecimal.ZERO;
 
-        // Calculate duration in days
         Duration duration = Duration.between(startDate, endDate);
         long days = duration.toDays();
         if (days < 1) {
-            days = 1; // Minimum 1 day
+            days = 1;
         }
 
-        // Add car rental fee
         fee = fee.add(car.getRentalPricePerDay().multiply(BigDecimal.valueOf(days)));
 
-        // Add driver fee if not self-drive
-        if (!selfDrive && driverId != null) {
+        if (driverId != null) {
             Optional<Driver> optionalDriver = driverService.getDriverById(driverId);
             if (optionalDriver.isPresent()) {
                 Driver driver = optionalDriver.get();
-                fee = fee.add(driver.getDailyWage().multiply(BigDecimal.valueOf(days)));
+                BigDecimal driverCost = driver.getDailyWage().multiply(BigDecimal.valueOf(days));
+
+                if (selfDrive) {
+                    driverCost = driverCost.divide(BigDecimal.valueOf(2));
+                }
+
+                fee = fee.add(driverCost);
             }
         }
 

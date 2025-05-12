@@ -1,6 +1,5 @@
 package com.zm.zmbackend.entities;
 
-import com.zm.zmbackend.entities.Car;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

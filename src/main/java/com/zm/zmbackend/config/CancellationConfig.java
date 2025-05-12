@@ -1,12 +1,15 @@
 package com.zm.zmbackend.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
-
+@Setter
+@Getter
 @Configuration
 public class CancellationConfig {
 
@@ -53,23 +56,4 @@ public class CancellationConfig {
         }
     }
 
-    public BigDecimal getDefaultCancellationFeePercentage() {
-        return defaultCancellationFeePercentage;
-    }
-
-    public BigDecimal getLastMinuteCancellationFeePercentage() {
-        return lastMinuteCancellationFeePercentage;
-    }
-
-    public BigDecimal getSameDayCancellationFeePercentage() {
-        return sameDayCancellationFeePercentage;
-    }
-
-    public int getLastMinuteHours() {
-        return lastMinuteHours;
-    }
-
-    public int getSameDayHours() {
-        return sameDayHours;
-    }
 }
