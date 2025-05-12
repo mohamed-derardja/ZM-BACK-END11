@@ -1,7 +1,7 @@
 package com.zm.zmbackend.services;
 
-import com.zm.zmbackend.enteties.Favourite;
-import com.zm.zmbackend.enteties.FavouriteId;
+import com.zm.zmbackend.entities.Favourite;
+
 import java.util.List;
 import java.util.Optional;
 

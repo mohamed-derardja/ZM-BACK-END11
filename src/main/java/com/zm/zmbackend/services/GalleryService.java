@@ -1,6 +1,6 @@
 package com.zm.zmbackend.services;
 
-import com.zm.zmbackend.enteties.Gallery;
+import com.zm.zmbackend.entities.Gallery;
 import java.util.List;
 import java.util.Optional;
 

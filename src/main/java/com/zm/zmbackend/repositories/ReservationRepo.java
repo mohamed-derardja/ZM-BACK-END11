@@ -1,6 +1,6 @@
 package com.zm.zmbackend.repositories;
 
-import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.entities.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

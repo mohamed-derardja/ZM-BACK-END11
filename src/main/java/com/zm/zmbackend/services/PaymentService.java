@@ -1,7 +1,7 @@
 package com.zm.zmbackend.services;
 
-import com.zm.zmbackend.enteties.Payment;
-import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.entities.Payment;
+import com.zm.zmbackend.entities.Reservation;
 import java.util.List;
 import java.util.Optional;
 

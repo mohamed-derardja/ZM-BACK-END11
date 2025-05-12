@@ -1,7 +1,7 @@
 package com.zm.zmbackend.controllers;
 
-import com.zm.zmbackend.enteties.Payment;
-import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.entities.Payment;
+import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.services.PaymentService;
 import com.zm.zmbackend.services.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;

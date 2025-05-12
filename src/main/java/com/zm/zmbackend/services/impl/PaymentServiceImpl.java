@@ -1,7 +1,7 @@
 package com.zm.zmbackend.services.impl;
 
-import com.zm.zmbackend.enteties.Payment;
-import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.entities.Payment;
+import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.repositories.PaymentRepo;
 import com.zm.zmbackend.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,6 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentRepo.findAll();
     }
 
-    @Override
     public List<Payment> getPaymentsByReservation(Reservation reservation) {
         // This would require a custom method in the repository
         // For now, we'll return all payments (in a real implementation, you'd add a findByReservation method)

@@ -1,4 +1,4 @@
-package com.zm.zmbackend.enteties;
+package com.zm.zmbackend.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

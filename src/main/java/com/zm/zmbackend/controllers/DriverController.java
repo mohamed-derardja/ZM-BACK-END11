@@ -1,6 +1,6 @@
 package com.zm.zmbackend.controllers;
 
-import com.zm.zmbackend.enteties.Driver;
+import com.zm.zmbackend.entities.Driver;
 import com.zm.zmbackend.services.DriverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

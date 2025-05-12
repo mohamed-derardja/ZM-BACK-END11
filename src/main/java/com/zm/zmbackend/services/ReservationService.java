@@ -1,6 +1,6 @@
 package com.zm.zmbackend.services;
 
-import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.entities.Reservation;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

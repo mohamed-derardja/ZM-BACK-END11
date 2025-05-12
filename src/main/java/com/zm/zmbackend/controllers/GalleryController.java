@@ -1,6 +1,6 @@
 package com.zm.zmbackend.controllers;
 
-import com.zm.zmbackend.enteties.Gallery;
+import com.zm.zmbackend.entities.Gallery;
 import com.zm.zmbackend.services.GalleryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

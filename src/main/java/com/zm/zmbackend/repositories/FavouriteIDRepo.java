@@ -1,7 +1,7 @@
 package com.zm.zmbackend.repositories;
 
-import com.zm.zmbackend.enteties.Favourite;
-import com.zm.zmbackend.enteties.FavouriteId;
+import com.zm.zmbackend.entities.Favourite;
+import com.zm.zmbackend.entities.FavouriteId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

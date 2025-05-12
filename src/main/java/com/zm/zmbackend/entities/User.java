@@ -1,10 +1,11 @@
-package com.zm.zmbackend.enteties;
+package com.zm.zmbackend.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -49,7 +50,7 @@ public class User {
 
     @Size(max = 255)
     @NotNull
-    @Column(name = "Email", nullable = false)
+    @Column(name = "Email", nullable = false, unique = true)
     private String email;
 
     @Size(max = 255)
@@ -57,7 +58,30 @@ public class User {
     @Column(name = "Password", nullable = false)
     private String password;
 
+    @NotNull
+    @ColumnDefault("false")
+    @Column(name = "Email_verified", nullable = false)
+    private Boolean emailVerified = false;
 
+    @NotNull
+    @ColumnDefault("false")
+    @Column(name = "Phone_verified", nullable = false)
+    private Boolean phoneVerified = false;
+
+    @Size(max = 255)
+    @Column(name = "Auth_token")
+    private String authToken;
+
+    @Column(name = "Token_expiry")
+    private Instant tokenExpiry;
+
+    @Size(max = 255)
+    @Column(name = "Email_verification_code")
+    private String emailVerificationCode;
+
+    @Size(max = 255)
+    @Column(name = "Phone_verification_code")
+    private String phoneVerificationCode;
 
     @NotNull
     @Column(name = "Created_at", nullable = false)
@@ -67,4 +91,14 @@ public class User {
     @Column(name = "Updated_at", nullable = false)
     private Instant updatedAt;
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

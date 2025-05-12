@@ -1,4 +1,4 @@
-package com.zm.zmbackend.enteties;
+package com.zm.zmbackend.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -53,6 +53,9 @@ public class Reservation {
     @NotNull
     @Column(name = "Fee", nullable = false, precision = 10, scale = 2)
     private BigDecimal fee;
+
+    @Column(name = "Cancellation_Fee", precision = 10, scale = 2)
+    private BigDecimal cancellationFee;
 
     @NotNull
     @Column(name = "Created_at", nullable = false)

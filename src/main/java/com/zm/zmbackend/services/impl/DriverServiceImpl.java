@@ -1,7 +1,7 @@
 package com.zm.zmbackend.services.impl;
 
-import com.zm.zmbackend.enteties.Driver;
-import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.entities.Driver;
+import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.repositories.DriverRepo;
 import com.zm.zmbackend.repositories.ReservationRepo;
 import com.zm.zmbackend.services.DriverService;

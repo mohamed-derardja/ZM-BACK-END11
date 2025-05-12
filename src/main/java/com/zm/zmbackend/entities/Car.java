@@ -1,4 +1,4 @@
-package com.zm.zmbackend.enteties;
+package com.zm.zmbackend.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -23,7 +23,7 @@ public class Car {
 
     @Size(max = 255)
     @NotNull
-    @Column(name = "License_plate", nullable = false)
+    @Column(name = "License_plate", nullable = false, unique = true)
     private String licensePlate;
 
     @NotNull
@@ -118,7 +118,7 @@ public class Car {
     @NotNull
     @ColumnDefault("1")
     @Column(name = "GPS_enabled", nullable = false)
-    private Boolean gpsEnabled = false;
+    private Boolean gpsEnabled = true;
 
     @Column(name = "Rating", columnDefinition = "int UNSIGNED not null")
     private Long rating;
@@ -131,4 +131,14 @@ public class Car {
     @Column(name = "Updated_at", nullable = false)
     private Instant updatedAt;
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

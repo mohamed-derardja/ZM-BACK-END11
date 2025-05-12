@@ -1,7 +1,7 @@
 package com.zm.zmbackend.services.impl;
 
-import com.zm.zmbackend.enteties.Car;
-import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.entities.Car;
+import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.repositories.CarRepo;
 import com.zm.zmbackend.repositories.ReservationRepo;
 import com.zm.zmbackend.services.CarService;

@@ -1,7 +1,6 @@
 package com.zm.zmbackend.controllers;
 
-import com.zm.zmbackend.enteties.Favourite;
-import com.zm.zmbackend.enteties.FavouriteId;
+import com.zm.zmbackend.entities.Favourite;
 import com.zm.zmbackend.services.FavouriteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

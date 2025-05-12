@@ -1,5 +1,7 @@
-package com.zm.zmbackend.enteties;
+package com.zm.zmbackend.entities;
 
+import com.zm.zmbackend.entities.Reservation;
+import com.zm.zmbackend.entities.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

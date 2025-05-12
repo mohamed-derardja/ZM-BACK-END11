@@ -1,4 +1,4 @@
-package com.zm.zmbackend.enteties;
+package com.zm.zmbackend.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -52,7 +52,7 @@ public class Driver {
 
     @Size(max = 255)
     @NotNull
-    @Column(name = "Email", nullable = false)
+    @Column(name = "Email", nullable = false, unique = true)
     private String email;
 
     @NotNull
@@ -96,4 +96,14 @@ public class Driver {
     @Column(name = "Updated_at", nullable = false)
     private Instant updatedAt;
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

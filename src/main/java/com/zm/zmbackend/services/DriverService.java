@@ -1,6 +1,6 @@
 package com.zm.zmbackend.services;
 
-import com.zm.zmbackend.enteties.Driver;
+import com.zm.zmbackend.entities.Driver;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;

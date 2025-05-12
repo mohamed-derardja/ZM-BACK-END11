@@ -1,6 +1,6 @@
 package com.zm.zmbackend.controllers;
 
-import com.zm.zmbackend.enteties.Reservation;
+import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.services.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

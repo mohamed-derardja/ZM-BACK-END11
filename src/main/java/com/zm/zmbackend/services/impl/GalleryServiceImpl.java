@@ -1,6 +1,6 @@
 package com.zm.zmbackend.services.impl;
 
-import com.zm.zmbackend.enteties.Gallery;
+import com.zm.zmbackend.entities.Gallery;
 import com.zm.zmbackend.repositories.GalleryRepo;
 import com.zm.zmbackend.services.GalleryService;
 import org.springframework.beans.factory.annotation.Autowired;

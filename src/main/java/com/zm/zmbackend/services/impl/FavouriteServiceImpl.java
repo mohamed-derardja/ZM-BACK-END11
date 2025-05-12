@@ -1,7 +1,7 @@
 package com.zm.zmbackend.services.impl;
 
-import com.zm.zmbackend.enteties.Favourite;
-import com.zm.zmbackend.enteties.FavouriteId;
+import com.zm.zmbackend.entities.Favourite;
+import com.zm.zmbackend.entities.FavouriteId;
 import com.zm.zmbackend.repositories.FavouriteRepo;
 import com.zm.zmbackend.services.FavouriteService;
 import org.springframework.beans.factory.annotation.Autowired;
