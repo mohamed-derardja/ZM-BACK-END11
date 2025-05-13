@@ -5,11 +5,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import lombok.*;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+@Getter
+@Setter
 
 public class UserPrincipal implements OAuth2User, UserDetails {
     private Long id;
@@ -43,9 +47,6 @@ public class UserPrincipal implements OAuth2User, UserDetails {
         return userPrincipal;
     }
 
-    public Long getId() {
-        return id;
-    }
 
     @Override
     public String getPassword() {
@@ -87,9 +88,6 @@ public class UserPrincipal implements OAuth2User, UserDetails {
         return attributes;
     }
 
-    public void setAttributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
-    }
 
     @Override
     public String getName() {

@@ -30,13 +30,11 @@ public interface UserService {
     // Authentication and validation
     boolean isAuthenticated(Long userId);
     boolean isEmailVerified(Long userId);
-    boolean isPhoneVerified(Long userId);
 
     // Verification
     boolean verifyEmail(Long userId, String verificationCode);
     boolean verifyPhone(Long userId, String verificationCode);
     String generateEmailVerificationCode(Long userId);
-    String generatePhoneVerificationCode(Long userId);
 
     // Token management
     String generateToken(Long userId);
