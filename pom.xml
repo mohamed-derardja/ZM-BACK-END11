@@ -127,6 +127,10 @@
             <artifactId>stripe-java</artifactId>
             <version>29.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
 
     </dependencies>
 
@@ -156,9 +160,9 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>10.15.0</version>
                 <configuration>
-                    <url>jdbc:mysql://localhost:3306/store_api?createDatabaseIfNotExist=true</url>
+                    <url>jdbc:mysql://localhost:3306/zm_data_base?createDatabaseIfNotExist=true</url>
                     <user>root</user>
-                    <password>MyPassword!</password>
+                    <password>Rca/ocO/ips/m0</password>
                     <cleanDisabled>false</cleanDisabled>
                 </configuration>
             </plugin>

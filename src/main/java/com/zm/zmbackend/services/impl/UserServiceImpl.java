@@ -296,12 +296,6 @@ public class UserServiceImpl implements UserService {
         return user.map(User::getEmailVerified).orElse(false);
     }
 
-    @Override
-    public boolean isPhoneVerified(Long userId) {
-        Optional<User> user = userRepo.findById(userId);
-        return user.map(User::getPhoneVerified).orElse(false);
-    }
-
     // Verification
     @Override
     public boolean verifyEmail(Long userId, String verificationCode) {
@@ -361,22 +355,6 @@ public class UserServiceImpl implements UserService {
         userRepo.save(user);
 
         // In a real application, this would send the code via email
-        return code;
-    }
-
-    @Override
-    public String generatePhoneVerificationCode(Long userId) {
-        Optional<User> optionalUser = userRepo.findById(userId);
-        if (optionalUser.isEmpty()) {
-            return null;
-        }
-
-        User user = optionalUser.get();
-        String code = generateVerificationCode();
-        user.setPhoneVerificationCode(code);
-        userRepo.save(user);
-
-        // In a real application, this would send the code via SMS
         return code;
     }
 

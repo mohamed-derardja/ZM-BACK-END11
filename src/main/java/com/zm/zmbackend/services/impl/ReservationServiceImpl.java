@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -273,7 +274,8 @@ public class ReservationServiceImpl implements ReservationService {
                 BigDecimal driverCost = driver.getDailyWage().multiply(BigDecimal.valueOf(days));
 
                 if (selfDrive) {
-                    driverCost = driverCost.divide(BigDecimal.valueOf(2));
+                    driverCost = driverCost
+                            .divide(BigDecimal.valueOf(2), 0, RoundingMode.CEILING); // 0 = no decimal places
                 }
 
                 fee = fee.add(driverCost);

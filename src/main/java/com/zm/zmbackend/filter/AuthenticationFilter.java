@@ -3,6 +3,7 @@ package com.zm.zmbackend.filter;
 import com.zm.zmbackend.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -16,7 +17,9 @@ public class AuthenticationFilter implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle( HttpServletRequest request,@NotNull
+                              HttpServletResponse response,
+                              Object handler) throws Exception {
         // Get the token from the request header
         String authToken = request.getHeader("Authorization");
         if (authToken == null || authToken.isEmpty()) {

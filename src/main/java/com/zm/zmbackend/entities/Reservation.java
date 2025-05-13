@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
-import com.zm.zmbackend.entities.PaymentMethodType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
