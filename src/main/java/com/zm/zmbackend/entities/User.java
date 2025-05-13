@@ -103,6 +103,14 @@ public class User {
     @Column(name = "Card_cvv")
     private String cardCvv;
 
+    @Size(max = 255)
+    @Column(name = "Provider_id")
+    private String providerId;
+
+    @Size(max = 50)
+    @Column(name = "Provider_name")
+    private String providerName;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();

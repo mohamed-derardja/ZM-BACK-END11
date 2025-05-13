@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -27,6 +28,41 @@ public class UserController {
     }
 
     // Authentication endpoints
+
+    @GetMapping("/oauth2/redirect")
+    public ResponseEntity<?> handleOAuth2Redirect(@RequestParam String token, @RequestParam Long userId) {
+        try {
+            Optional<User> userOpt = userService.getUserById(userId);
+            if (userOpt.isEmpty()) {
+                return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+            }
+
+            User user = userOpt.get();
+
+            LoginResponse response = new LoginResponse(
+                user.getId(),
+                token,
+                user.getEmailVerified(),
+                user.getPhoneVerified()
+            );
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/oauth2/check-email")
+    public ResponseEntity<?> checkEmailExists(@RequestParam String email) {
+        try {
+            Optional<User> userOpt = userService.getUserByEmail(email);
+            boolean exists = userOpt.isPresent();
+
+            return new ResponseEntity<>(Map.of("exists", exists), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
