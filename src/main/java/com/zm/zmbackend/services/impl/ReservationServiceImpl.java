@@ -2,6 +2,7 @@ package com.zm.zmbackend.services.impl;
 
 import com.zm.zmbackend.entities.Car;
 import com.zm.zmbackend.entities.Driver;
+import com.zm.zmbackend.entities.PaymentMethodType;
 import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.repositories.ReservationRepo;
 import com.zm.zmbackend.services.CarService;
@@ -22,12 +23,14 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepo reservationRepo;
     private final CarService carService;
     private final DriverService driverService;
-
+    private final PaymentServiceImpl paymentService;
     @Autowired
-    public ReservationServiceImpl(ReservationRepo reservationRepo, CarService carService, DriverService driverService) {
+    public ReservationServiceImpl(ReservationRepo reservationRepo, CarService carService, DriverService driverService, PaymentServiceImpl paymentService) {
         this.reservationRepo = reservationRepo;
         this.carService = carService;
         this.driverService = driverService;
+
+        this.paymentService = paymentService;
     }
 
     @Override
@@ -91,7 +94,14 @@ public class ReservationServiceImpl implements ReservationService {
 
         carService.updateCarStatus(reservation.getCar().getId(), "Reserved");
 
-        return reservationRepo.save(reservation);
+        Reservation savedReservation = reservationRepo.save(reservation);
+
+        // Create a payment record for the reservation fee
+        PaymentMethodType paymentMethod = savedReservation.getPaymentMethod() != null ? 
+                                         savedReservation.getPaymentMethod() : PaymentMethodType.CASH;
+        paymentService.createReservationPayment(savedReservation, fee, paymentMethod);
+
+        return savedReservation;
     }
 
     @Override
@@ -119,6 +129,9 @@ public class ReservationServiceImpl implements ReservationService {
             throw new RuntimeException("Driver cannot be changed. You may only remove the driver (switch to self-drive).");
         }
 
+        BigDecimal fee = existingReservation.getFee();
+        boolean feeChanged = false;
+
         if (datesChanged || carChanged || driverRemoved) {
             if (!validateReservationDates(reservation.getStartDate(), reservation.getEndDate())) {
                 throw new RuntimeException("Invalid reservation dates");
@@ -134,7 +147,7 @@ public class ReservationServiceImpl implements ReservationService {
                 }
             }
 
-            BigDecimal fee = calculateReservationFee(
+            fee = calculateReservationFee(
                     reservation.getCar().getId(),
                     existingReservation.getDriver() != null ? existingReservation.getDriver().getId() : null,
                     reservation.getStartDate(),
@@ -142,6 +155,7 @@ public class ReservationServiceImpl implements ReservationService {
                     reservation.getSelfDrive() && existingReservation.getDriver() != null
             );
             reservation.setFee(fee);
+            feeChanged = true;
 
             if (carChanged) {
                 carService.updateCarStatus(existingReservation.getCar().getId(), "Available");
@@ -155,7 +169,16 @@ public class ReservationServiceImpl implements ReservationService {
 
         reservation.setId(id);
         reservation.setDriver(existingReservation.getDriver()); // Preserve original driver
-        return reservationRepo.save(reservation);
+        Reservation updatedReservation = reservationRepo.save(reservation);
+
+        // Update payment if fee has changed
+        if (feeChanged) {
+            PaymentMethodType paymentMethod = updatedReservation.getPaymentMethod() != null ? 
+                                             updatedReservation.getPaymentMethod() : PaymentMethodType.CASH;
+            paymentService.createReservationPayment(updatedReservation, fee, paymentMethod);
+        }
+
+        return updatedReservation;
     }
 
     @Override
@@ -182,6 +205,11 @@ public class ReservationServiceImpl implements ReservationService {
             if (!reservation.getSelfDrive() && reservation.getDriver() != null) {
                 driverService.updateDriverAvailability(reservation.getDriver().getId(), false);
             }
+
+            // Create a payment record when the reservation is approved
+            PaymentMethodType paymentMethod = reservation.getPaymentMethod() != null ? 
+                                             reservation.getPaymentMethod() : PaymentMethodType.CASH;
+            paymentService.createReservationPayment(reservation, reservation.getFee(), paymentMethod);
         } else if ("Rejected".equals(status) || "Ended".equals(status)) {
             carService.updateCarStatus(reservation.getCar().getId(), "Available");
 

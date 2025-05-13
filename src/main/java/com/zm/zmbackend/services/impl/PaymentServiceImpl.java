@@ -1,12 +1,15 @@
 package com.zm.zmbackend.services.impl;
 
 import com.zm.zmbackend.entities.Payment;
+import com.zm.zmbackend.entities.PaymentMethodType;
 import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.repositories.PaymentRepo;
 import com.zm.zmbackend.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +48,27 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Payment createPayment(Payment payment) {
+        return paymentRepo.save(payment);
+    }
+
+    @Override
+    public Payment createReservationPayment(Reservation reservation, BigDecimal amount) {
+        // Default to CASH payment method if not specified
+        return createReservationPayment(reservation, amount, PaymentMethodType.CASH);
+    }
+
+    @Override
+    public Payment createReservationPayment(Reservation reservation, BigDecimal amount, PaymentMethodType paymentMethod) {
+        Payment payment = new Payment();
+        payment.setReservation(reservation);
+        payment.setUser(reservation.getUser());
+        payment.setAmount(amount);
+        payment.setPaymentDate(Instant.now());
+        payment.setStatus("pending");
+        payment.setPaymentMethod(paymentMethod);
+        payment.setCreatedAt(Instant.now());
+        payment.setUpdatedAt(Instant.now());
+
         return paymentRepo.save(payment);
     }
 

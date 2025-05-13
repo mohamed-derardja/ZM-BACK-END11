@@ -91,6 +91,18 @@ public class User {
     @Column(name = "Updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Size(max = 16)
+    @Column(name = "Card_number")
+    private String cardNumber;
+
+    @Size(max = 5)
+    @Column(name = "Card_expiration")
+    private String cardExpiration;
+
+    @Size(max = 3)
+    @Column(name = "Card_cvv")
+    private String cardCvv;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();

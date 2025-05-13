@@ -53,4 +53,7 @@ public class Payment {
     @Column(name = "Updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    private PaymentMethodType paymentMethod;
 }

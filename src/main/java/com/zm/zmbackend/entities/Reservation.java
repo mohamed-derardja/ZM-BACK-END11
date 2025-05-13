@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import com.zm.zmbackend.entities.PaymentMethodType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -56,6 +57,10 @@ public class Reservation {
 
     @Column(name = "Cancellation_Fee", precision = 10, scale = 2)
     private BigDecimal cancellationFee;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    private PaymentMethodType paymentMethod;
 
     @NotNull
     @Column(name = "Created_at", nullable = false)
