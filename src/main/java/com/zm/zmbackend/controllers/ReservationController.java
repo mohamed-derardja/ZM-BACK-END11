@@ -30,8 +30,11 @@ public class ReservationController {
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
         Optional<Reservation> reservation = reservationService.getReservationById(id);
-        return reservation.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        if (reservation.isPresent()) {
+            return new ResponseEntity<>(reservation.get(), HttpStatus.OK);
+        } else {
+            throw new com.zm.zmbackend.exceptions.ResourceNotFoundException("Reservation", "id", id);
+        }
     }
 
     @GetMapping("/user/{userId}")
@@ -66,31 +69,19 @@ public class ReservationController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @RequestBody Reservation reservation) {
-        try {
-            Reservation updatedReservation = reservationService.updateReservation(id, reservation);
-            return new ResponseEntity<>(updatedReservation, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        Reservation updatedReservation = reservationService.updateReservation(id, reservation);
+        return new ResponseEntity<>(updatedReservation, HttpStatus.OK);
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<Reservation> updateReservationStatus(@PathVariable Long id, @RequestBody String status) {
-        try {
-            Reservation updatedReservation = reservationService.updateReservationStatus(id, status);
-            return new ResponseEntity<>(updatedReservation, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        Reservation updatedReservation = reservationService.updateReservationStatus(id, status);
+        return new ResponseEntity<>(updatedReservation, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
-        try {
-            reservationService.deleteReservation(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        reservationService.deleteReservation(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

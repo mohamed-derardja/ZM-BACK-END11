@@ -4,6 +4,9 @@ import com.zm.zmbackend.entities.Car;
 import com.zm.zmbackend.entities.Driver;
 import com.zm.zmbackend.entities.PaymentMethodType;
 import com.zm.zmbackend.entities.Reservation;
+import com.zm.zmbackend.exceptions.InvalidReservationException;
+import com.zm.zmbackend.exceptions.ResourceNotFoundException;
+import com.zm.zmbackend.exceptions.ResourceUnavailableException;
 import com.zm.zmbackend.repositories.ReservationRepo;
 import com.zm.zmbackend.services.CarService;
 import com.zm.zmbackend.services.DriverService;
@@ -68,15 +71,15 @@ public class ReservationServiceImpl implements ReservationService {
     public Reservation createReservation(Reservation reservation) {
         // Driver must not be set by user
         if (reservation.getDriver() != null) {
-            throw new RuntimeException("Driver cannot be selected during reservation creation. It will be assigned by the admin.");
+            throw new InvalidReservationException("Driver cannot be selected during reservation creation. It will be assigned by the admin.");
         }
 
         if (!validateReservationDates(reservation.getStartDate(), reservation.getEndDate())) {
-            throw new RuntimeException("Invalid reservation dates");
+            throw new InvalidReservationException("Invalid reservation dates. Start date must be in the future, end date must be after start date, and duration must not exceed 90 days.");
         }
 
         if (!checkCarAvailability(reservation.getCar().getId(), reservation.getStartDate(), reservation.getEndDate())) {
-            throw new RuntimeException("Car is not available for the selected dates");
+            throw new ResourceUnavailableException("Car", reservation.getCar().getId());
         }
 
         // Calculate fee without driver
@@ -109,7 +112,7 @@ public class ReservationServiceImpl implements ReservationService {
     public Reservation updateReservation(Long id, Reservation reservation) {
         Optional<Reservation> existingReservationOpt = reservationRepo.findById(id);
         if (existingReservationOpt.isEmpty()) {
-            throw new RuntimeException("Reservation not found with id: " + id);
+            throw new ResourceNotFoundException("Reservation", "id", id);
         }
 
         Reservation existingReservation = existingReservationOpt.get();
@@ -127,7 +130,7 @@ public class ReservationServiceImpl implements ReservationService {
         );
 
         if (driverChanged) {
-            throw new RuntimeException("Driver cannot be changed. You may only remove the driver (switch to self-drive).");
+            throw new InvalidReservationException("Driver cannot be changed. You may only remove the driver (switch to self-drive).");
         }
 
         BigDecimal fee = existingReservation.getFee();
@@ -135,16 +138,16 @@ public class ReservationServiceImpl implements ReservationService {
 
         if (datesChanged || carChanged || driverRemoved) {
             if (!validateReservationDates(reservation.getStartDate(), reservation.getEndDate())) {
-                throw new RuntimeException("Invalid reservation dates");
+                throw new InvalidReservationException("Invalid reservation dates. Start date must be in the future, end date must be after start date, and duration must not exceed 90 days.");
             }
 
             if (carChanged && !checkCarAvailability(reservation.getCar().getId(), reservation.getStartDate(), reservation.getEndDate())) {
-                throw new RuntimeException("Car is not available for the selected dates");
+                throw new ResourceUnavailableException("Car", reservation.getCar().getId());
             }
 
             if (!reservation.getSelfDrive() && existingReservation.getDriver() != null && datesChanged) {
                 if (!checkDriverAvailability(existingReservation.getDriver().getId(), reservation.getStartDate(), reservation.getEndDate())) {
-                    throw new RuntimeException("Driver is not available for the selected dates");
+                    throw new ResourceUnavailableException("Driver", existingReservation.getDriver().getId());
                 }
             }
 
@@ -185,7 +188,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public void deleteReservation(Long id) {
         if (!reservationRepo.existsById(id)) {
-            throw new RuntimeException("Reservation not found with id: " + id);
+            throw new ResourceNotFoundException("Reservation", "id", id);
         }
         reservationRepo.deleteById(id);
     }
@@ -194,7 +197,7 @@ public class ReservationServiceImpl implements ReservationService {
     public Reservation updateReservationStatus(Long id, String status) {
         Optional<Reservation> optionalReservation = reservationRepo.findById(id);
         if (optionalReservation.isEmpty()) {
-            throw new RuntimeException("Reservation not found with id: " + id);
+            throw new ResourceNotFoundException("Reservation", "id", id);
         }
 
         Reservation reservation = optionalReservation.get();
@@ -253,7 +256,7 @@ public class ReservationServiceImpl implements ReservationService {
     public BigDecimal calculateReservationFee(Long carId, Long driverId, Instant startDate, Instant endDate, Boolean selfDrive) {
         Optional<Car> optionalCar = carService.getCarById(carId);
         if (optionalCar.isEmpty()) {
-            throw new RuntimeException("Car not found with id: " + carId);
+            throw new ResourceNotFoundException("Car", "id", carId);
         }
 
         Car car = optionalCar.get();
