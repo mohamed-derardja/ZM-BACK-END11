@@ -2,10 +2,13 @@ package com.zm.zmbackend.services.impl;
 
 import com.zm.zmbackend.entities.Driver;
 import com.zm.zmbackend.entities.Reservation;
+import com.zm.zmbackend.exceptions.ResourceNotFoundException;
 import com.zm.zmbackend.repositories.DriverRepo;
 import com.zm.zmbackend.repositories.ReservationRepo;
 import com.zm.zmbackend.services.DriverService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -30,6 +33,11 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
+    public Page<Driver> getAllDriversPaged(Pageable pageable) {
+        return driverRepo.findAll(pageable);
+    }
+
+    @Override
     public Optional<Driver> getDriverById(Long id) {
         return driverRepo.findById(id);
     }
@@ -42,7 +50,7 @@ public class DriverServiceImpl implements DriverService {
     @Override
     public Driver updateDriver(Long id, Driver driver) {
         if (!driverRepo.existsById(id)) {
-            throw new RuntimeException("Driver not found with id: " + id);
+            throw new ResourceNotFoundException("Driver", "id", id);
         }
         driver.setId(id);
         return driverRepo.save(driver);
@@ -51,7 +59,7 @@ public class DriverServiceImpl implements DriverService {
     @Override
     public void deleteDriver(Long id) {
         if (!driverRepo.existsById(id)) {
-            throw new RuntimeException("Driver not found with id: " + id);
+            throw new ResourceNotFoundException("Driver", "id", id);
         }
         driverRepo.deleteById(id);
     }
@@ -60,7 +68,7 @@ public class DriverServiceImpl implements DriverService {
     public boolean isDriverAvailable(Long driverId, Instant startDate, Instant endDate) {
         Optional<Driver> optionalDriver = driverRepo.findById(driverId);
         if (optionalDriver.isEmpty()) {
-            throw new RuntimeException("Driver not found with id: " + driverId);
+            throw new ResourceNotFoundException("Driver", "id", driverId);
         }
 
         Driver driver = optionalDriver.get();
@@ -77,7 +85,7 @@ public class DriverServiceImpl implements DriverService {
     public void updateDriverAvailability(Long driverId, Boolean availability) {
         Optional<Driver> optionalDriver = driverRepo.findById(driverId);
         if (optionalDriver.isEmpty()) {
-            throw new RuntimeException("Driver not found with id: " + driverId);
+            throw new ResourceNotFoundException("Driver", "id", driverId);
         }
 
         Driver driver = optionalDriver.get();

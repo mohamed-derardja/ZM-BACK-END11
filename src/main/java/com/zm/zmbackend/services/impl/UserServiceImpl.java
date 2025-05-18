@@ -6,11 +6,18 @@ import com.zm.zmbackend.entities.PaymentMethodType;
 import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.entities.User;
 import com.zm.zmbackend.config.CancellationConfig;
+import com.zm.zmbackend.exceptions.AuthenticationException;
+import com.zm.zmbackend.exceptions.AuthorizationException;
+import com.zm.zmbackend.exceptions.BusinessRuleViolationException;
+import com.zm.zmbackend.exceptions.RateLimitExceededException;
+import com.zm.zmbackend.exceptions.ResourceNotFoundException;
+import com.zm.zmbackend.exceptions.ValidationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.zm.zmbackend.repositories.CarRepo;
 import com.zm.zmbackend.repositories.PaymentRepo;
 import com.zm.zmbackend.repositories.UserRepo;
 import com.zm.zmbackend.services.CarService;
+import com.zm.zmbackend.services.EmailService;
 import com.zm.zmbackend.services.ReservationService;
 import com.zm.zmbackend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final ReservationService reservationService;
     private final CancellationConfig cancellationConfig;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     // For rate limiting: userId -> list of reservation attempt timestamps
     private final Map<Long, List<Instant>> reservationAttempts = new ConcurrentHashMap<>();
@@ -55,7 +63,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     public UserServiceImpl(UserRepo userRepo, CarRepo carRepo, PaymentRepo paymentRepo,
                           CarService carService, ReservationService reservationService,
-                          CancellationConfig cancellationConfig, PasswordEncoder passwordEncoder) {
+                          CancellationConfig cancellationConfig, PasswordEncoder passwordEncoder,
+                          EmailService emailService) {
         this.userRepo = userRepo;
         this.carRepo = carRepo;
         this.paymentRepo = paymentRepo;
@@ -63,6 +72,7 @@ public class UserServiceImpl implements UserService {
         this.reservationService = reservationService;
         this.cancellationConfig = cancellationConfig;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     // Basic CRUD operations with authorization
@@ -103,11 +113,11 @@ public class UserServiceImpl implements UserService {
     public User updateUser(Long id, User user, Long currentUserId) {
         // Authorization check: users can only update their own account
         if (!id.equals(currentUserId)) {
-            throw new RuntimeException("Unauthorized: You can only update your own account");
+            throw new AuthorizationException("Unauthorized: You can only update your own account");
         }
 
         if (!userRepo.existsById(id)) {
-            throw new RuntimeException("User not found with id: " + id);
+            throw new ResourceNotFoundException("User", "id", id);
         }
 
         // Preserve creation timestamp and other fields if needed
@@ -136,11 +146,11 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long id, Long currentUserId) {
         // Authorization check: users can only delete their own account
         if (!id.equals(currentUserId)) {
-            throw new RuntimeException("Unauthorized: You can only delete your own account");
+            throw new AuthorizationException("Unauthorized: You can only delete your own account");
         }
 
         if (!userRepo.existsById(id)) {
-            throw new RuntimeException("User not found with id: " + id);
+            throw new ResourceNotFoundException("User", "id", id);
         }
         userRepo.deleteById(id);
     }
@@ -153,8 +163,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Page<Car> getAllAvailableCarsPaged(Pageable pageable) {
+        return carService.getAvailableCarsPaged(pageable);
+    }
+
+    @Override
     public List<Car> getCarsByBrand(String brand) {
         return carRepo.findByBrand(brand);
+    }
+
+    @Override
+    public Page<Car> getCarsByBrandPaged(String brand, Pageable pageable) {
+        return carService.getCarsByBrandPaged(brand, pageable);
     }
 
     @Override
@@ -163,8 +183,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Page<Car> getCarsByModelPaged(String model, Pageable pageable) {
+        return carService.getCarsByModelPaged(model, pageable);
+    }
+
+    @Override
     public List<Car> getCarsByRatingRange(Long minRating, Long maxRating) {
         return carRepo.findByRatingBetween(minRating, maxRating);
+    }
+
+    @Override
+    public Page<Car> getCarsByRatingRangePaged(Long minRating, Long maxRating, Pageable pageable) {
+        return carService.getCarsByRatingRangePaged(minRating, maxRating, pageable);
     }
 
     // Reservation management
@@ -173,32 +203,32 @@ public class UserServiceImpl implements UserService {
     public Reservation createReservation(Reservation reservation, Long currentUserId) {
         // Check if user is authenticated
         if (!isAuthenticated(currentUserId)) {
-            throw new RuntimeException("Unauthorized: User must be authenticated");
+            throw new AuthenticationException("Unauthorized: User must be authenticated");
         }
 
         // Check if user's email is verified (optional requirement)
         if (!isEmailVerified(currentUserId)) {
-            throw new RuntimeException("Email verification required before making a reservation");
+            throw new AuthenticationException("Email verification required before making a reservation");
         }
 
         // Check rate limit
         if (!checkReservationRateLimit(currentUserId)) {
-            throw new RuntimeException("Rate limit exceeded: Please try again later");
+            throw new RateLimitExceededException("Rate limit exceeded: Please try again later");
         }
 
         // Authorization check: users can only create reservations for themselves
         if (!reservation.getUser().getId().equals(currentUserId)) {
-            throw new RuntimeException("Unauthorized: You can only create reservations for yourself");
+            throw new AuthorizationException("Unauthorized: You can only create reservations for yourself");
         }
 
         // Validate reservation dates
         if (!reservationService.validateReservationDates(reservation.getStartDate(), reservation.getEndDate())) {
-            throw new RuntimeException("Invalid reservation dates: Reservations must be for present or future dates and cannot exceed " + MAX_RESERVATION_DAYS + " days");
+            throw new ValidationException("Invalid reservation dates: Reservations must be for present or future dates and cannot exceed " + MAX_RESERVATION_DAYS + " days");
         }
 
         // Check car availability
         if (!reservationService.checkCarAvailability(reservation.getCar().getId(), reservation.getStartDate(), reservation.getEndDate())) {
-            throw new RuntimeException("Car is not available for the selected dates: There is an overlapping reservation");
+            throw new BusinessRuleViolationException("Car is not available for the selected dates: There is an overlapping reservation");
         }
 
         // Set creation and update timestamps
@@ -214,31 +244,31 @@ public class UserServiceImpl implements UserService {
     public Reservation cancelReservation(Long reservationId, Long currentUserId) {
         // Check if user is authenticated
         if (!isAuthenticated(currentUserId)) {
-            throw new RuntimeException("Unauthorized: User must be authenticated");
+            throw new AuthenticationException("Unauthorized: User must be authenticated");
         }
 
         // Check if user's email is verified (optional requirement)
         if (!isEmailVerified(currentUserId)) {
-            throw new RuntimeException("Email verification required before cancelling a reservation");
+            throw new AuthenticationException("Email verification required before cancelling a reservation");
         }
 
         // Get the reservation
         Optional<Reservation> optionalReservation = reservationService.getReservationById(reservationId);
         if (optionalReservation.isEmpty()) {
-            throw new RuntimeException("Reservation not found with id: " + reservationId);
+            throw new ResourceNotFoundException("Reservation", "id", reservationId);
         }
 
         Reservation reservation = optionalReservation.get();
 
         // Authorization check: users can only cancel their own reservations
         if (!reservation.getUser().getId().equals(currentUserId)) {
-            throw new RuntimeException("Unauthorized: You can only cancel your own reservations");
+            throw new AuthorizationException("Unauthorized: You can only cancel your own reservations");
         }
 
         // Check if the reservation has already started or ended
         Instant now = Instant.now();
         if (reservation.getStartDate().isBefore(now)) {
-            throw new RuntimeException("Cannot cancel a reservation that has already started or ended");
+            throw new BusinessRuleViolationException("Cannot cancel a reservation that has already started or ended");
         }
 
         // Calculate cancellation fee based on how close to the start time
@@ -263,7 +293,7 @@ public class UserServiceImpl implements UserService {
     public List<Reservation> getUpcomingReservations(Long userId, Long currentUserId) {
         // Authorization check: users can only view their own reservations
         if (!userId.equals(currentUserId)) {
-            throw new RuntimeException("Unauthorized: You can only view your own reservations");
+            throw new AuthorizationException("Unauthorized: You can only view your own reservations");
         }
 
         // Get all reservations for the user
@@ -277,10 +307,42 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Page<Reservation> getUpcomingReservationsPaged(Long userId, Long currentUserId, Pageable pageable) {
+        // Authorization check: users can only view their own reservations
+        if (!userId.equals(currentUserId)) {
+            throw new AuthorizationException("Unauthorized: You can only view your own reservations");
+        }
+
+        // Get all reservations for the user and filter in memory
+        // Note: This is not optimal for large datasets as it loads all data first
+        // A better approach would be to add a custom query method in the repository
+        List<Reservation> userReservations = reservationService.getReservationsByUserId(userId);
+
+        // Filter for upcoming reservations (start date is in the future)
+        Instant now = Instant.now();
+        List<Reservation> upcomingReservations = userReservations.stream()
+            .filter(r -> r.getStartDate().isAfter(now))
+            .toList();
+
+        // Get the paginated result from the filtered list
+        // This is a simplified approach; in a real-world scenario, 
+        // you would want to implement a custom repository method for better performance
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), upcomingReservations.size());
+
+        if (start > upcomingReservations.size()) {
+            return Page.empty(pageable);
+        }
+
+        List<Reservation> pageContent = upcomingReservations.subList(start, end);
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, upcomingReservations.size());
+    }
+
+    @Override
     public List<Reservation> getPastReservations(Long userId, Long currentUserId) {
         // Authorization check: users can only view their own reservations
         if (!userId.equals(currentUserId)) {
-            throw new RuntimeException("Unauthorized: You can only view your own reservations");
+            throw new AuthorizationException("Unauthorized: You can only view your own reservations");
         }
 
         // Get all reservations for the user
@@ -291,6 +353,55 @@ public class UserServiceImpl implements UserService {
         return userReservations.stream()
             .filter(r -> r.getEndDate().isBefore(now))
             .toList();
+    }
+
+    @Override
+    public Page<Reservation> getPastReservationsPaged(Long userId, Long currentUserId, Pageable pageable) {
+        // Authorization check: users can only view their own reservations
+        if (!userId.equals(currentUserId)) {
+            throw new AuthorizationException("Unauthorized: You can only view your own reservations");
+        }
+
+        // Get all reservations for the user and filter in memory
+        // Note: This is not optimal for large datasets as it loads all data first
+        // A better approach would be to add a custom query method in the repository
+        List<Reservation> userReservations = reservationService.getReservationsByUserId(userId);
+
+        // Filter for past reservations (end date is in the past)
+        Instant now = Instant.now();
+        List<Reservation> pastReservations = userReservations.stream()
+            .filter(r -> r.getEndDate().isBefore(now))
+            .toList();
+
+        // Get the paginated result from the filtered list
+        // This is a simplified approach; in a real-world scenario, 
+        // you would want to implement a custom repository method for better performance
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), pastReservations.size());
+
+        if (start > pastReservations.size()) {
+            return Page.empty(pageable);
+        }
+
+        List<Reservation> pageContent = pastReservations.subList(start, end);
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, pastReservations.size());
+    }
+
+    // Payment methods implementation
+
+    @Override
+    public Page<Payment> getAllPaymentsPaged(Pageable pageable) {
+        return paymentRepo.findAll(pageable);
+    }
+
+    @Override
+    public Page<Payment> getPaymentsByUserIdPaged(Long userId, Pageable pageable) {
+        return paymentRepo.findByUserId(userId, pageable);
+    }
+
+    @Override
+    public Page<Payment> getPaymentsByReservationPaged(Reservation reservation, Pageable pageable) {
+        return paymentRepo.findByReservation(reservation, pageable);
     }
 
     // Authentication and validation
@@ -346,7 +457,14 @@ public class UserServiceImpl implements UserService {
         user.setEmailVerificationCode(code);
         userRepo.save(user);
 
-        // In a real application, this would send the code via email
+        // Send the verification code via email
+        try {
+            emailService.sendVerificationCode(user.getEmail(), code);
+        } catch (Exception e) {
+            // Log the error but don't fail the method
+            System.err.println("Failed to send verification email: " + e.getMessage());
+        }
+
         return code;
     }
 
@@ -449,16 +567,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Payment> getPaymentsByUserId(Long userId) {
-        // This would require a custom method in the repository
-        // For now, we'll return all payments (in a real implementation, you'd add a findByUserId method)
-        return paymentRepo.findAll();
+        return paymentRepo.findByUserId(userId);
     }
 
     @Override
     public List<Payment> getPaymentsByReservation(Reservation reservation) {
-        // This would require a custom method in the repository
-        // For now, we'll return all payments (in a real implementation, you'd add a findByReservation method)
-        return paymentRepo.findAll();
+        return paymentRepo.findByReservation(reservation);
     }
 
     @Override
@@ -490,7 +604,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Payment updatePayment(Long id, Payment payment) {
         if (!paymentRepo.existsById(id)) {
-            throw new RuntimeException("Payment not found with id: " + id);
+            throw new ResourceNotFoundException("Payment", "id", id);
         }
         payment.setId(id);
         return paymentRepo.save(payment);
@@ -499,7 +613,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deletePayment(Long id) {
         if (!paymentRepo.existsById(id)) {
-            throw new RuntimeException("Payment not found with id: " + id);
+            throw new ResourceNotFoundException("Payment", "id", id);
         }
         paymentRepo.deleteById(id);
     }

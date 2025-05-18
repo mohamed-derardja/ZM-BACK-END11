@@ -1,9 +1,12 @@
 package com.zm.zmbackend.services.impl;
 
 import com.zm.zmbackend.entities.Gallery;
+import com.zm.zmbackend.exceptions.ResourceNotFoundException;
 import com.zm.zmbackend.repositories.GalleryRepo;
 import com.zm.zmbackend.services.GalleryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,15 +28,23 @@ public class GalleryServiceImpl implements GalleryService {
     }
 
     @Override
+    public Page<Gallery> getAllGalleriesPaged(Pageable pageable) {
+        return galleryRepo.findAll(pageable);
+    }
+
+    @Override
     public Optional<Gallery> getGalleryById(Long id) {
         return galleryRepo.findById(id);
     }
 
     @Override
     public List<Gallery> getGalleriesByCarId(Long carId) {
-        // This would require a custom method in the repository
-        // For now, we'll return all galleries (in a real implementation, you'd add a findByCarId method)
-        return galleryRepo.findAll();
+        return galleryRepo.findByCarId(carId);
+    }
+
+    @Override
+    public Page<Gallery> getGalleriesByCarIdPaged(Long carId, Pageable pageable) {
+        return galleryRepo.findByCarId(carId, pageable);
     }
 
     @Override
@@ -44,7 +55,7 @@ public class GalleryServiceImpl implements GalleryService {
     @Override
     public Gallery updateGallery(Long id, Gallery gallery) {
         if (!galleryRepo.existsById(id)) {
-            throw new RuntimeException("Gallery not found with id: " + id);
+            throw new ResourceNotFoundException("Gallery", "id", id);
         }
         gallery.setId(id);
         return galleryRepo.save(gallery);
@@ -53,7 +64,7 @@ public class GalleryServiceImpl implements GalleryService {
     @Override
     public void deleteGallery(Long id) {
         if (!galleryRepo.existsById(id)) {
-            throw new RuntimeException("Gallery not found with id: " + id);
+            throw new ResourceNotFoundException("Gallery", "id", id);
         }
         galleryRepo.deleteById(id);
     }

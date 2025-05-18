@@ -2,6 +2,7 @@ package com.zm.zmbackend.services.impl;
 
 import com.zm.zmbackend.entities.Car;
 import com.zm.zmbackend.entities.Reservation;
+import com.zm.zmbackend.exceptions.ResourceNotFoundException;
 import com.zm.zmbackend.repositories.CarRepo;
 import com.zm.zmbackend.repositories.ReservationRepo;
 import com.zm.zmbackend.services.CarService;
@@ -49,7 +50,7 @@ public class CarServiceImpl implements CarService {
     @Override
     public Car updateCar(Long id, Car car) {
         if (!carRepo.existsById(id)) {
-            throw new RuntimeException("Car not found with id: " + id);
+            throw new ResourceNotFoundException("Car", "id", id);
         }
         car.setId(id);
         return carRepo.save(car);
@@ -58,7 +59,7 @@ public class CarServiceImpl implements CarService {
     @Override
     public void deleteCar(Long id) {
         if (!carRepo.existsById(id)) {
-            throw new RuntimeException("Car not found with id: " + id);
+            throw new ResourceNotFoundException("Car", "id", id);
         }
         carRepo.deleteById(id);
     }
@@ -92,7 +93,7 @@ public class CarServiceImpl implements CarService {
     public boolean isCarAvailable(Long carId, Instant startDate, Instant endDate) {
         Optional<Car> optionalCar = carRepo.findById(carId);
         if (optionalCar.isEmpty()) {
-            throw new RuntimeException("Car not found with id: " + carId);
+            throw new ResourceNotFoundException("Car", "id", carId);
         }
 
         Car car = optionalCar.get();
@@ -109,7 +110,7 @@ public class CarServiceImpl implements CarService {
     public void updateCarStatus(Long carId, String status) {
         Optional<Car> optionalCar = carRepo.findById(carId);
         if (optionalCar.isEmpty()) {
-            throw new RuntimeException("Car not found with id: " + carId);
+            throw new ResourceNotFoundException("Car", "id", carId);
         }
 
         Car car = optionalCar.get();

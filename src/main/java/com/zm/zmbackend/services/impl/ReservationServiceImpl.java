@@ -12,6 +12,8 @@ import com.zm.zmbackend.services.CarService;
 import com.zm.zmbackend.services.DriverService;
 import com.zm.zmbackend.services.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -43,6 +45,11 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    public Page<Reservation> getAllReservationsPaged(Pageable pageable) {
+        return reservationRepo.findAll(pageable);
+    }
+
+    @Override
     public Optional<Reservation> getReservationById(Long id) {
         return reservationRepo.findById(id);
     }
@@ -53,8 +60,18 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    public Page<Reservation> getReservationsByUserIdPaged(Long userId, Pageable pageable) {
+        return reservationRepo.findByUserId(userId, pageable);
+    }
+
+    @Override
     public List<Reservation> getReservationsByCarId(Long carId) {
         return reservationRepo.findByCarId(carId);
+    }
+
+    @Override
+    public Page<Reservation> getReservationsByCarIdPaged(Long carId, Pageable pageable) {
+        return reservationRepo.findByCarId(carId, pageable);
     }
 
     @Override
@@ -63,8 +80,18 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    public Page<Reservation> getReservationsByDriverIdPaged(Long driverId, Pageable pageable) {
+        return reservationRepo.findByDriverId(driverId, pageable);
+    }
+
+    @Override
     public List<Reservation> getReservationsByStatus(String status) {
         return reservationRepo.findByStatus(status);
+    }
+
+    @Override
+    public Page<Reservation> getReservationsByStatusPaged(String status, Pageable pageable) {
+        return reservationRepo.findByStatus(status, pageable);
     }
 
     @Override

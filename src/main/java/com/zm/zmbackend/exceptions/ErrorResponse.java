@@ -1,6 +1,8 @@
 package com.zm.zmbackend.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
@@ -9,7 +11,10 @@ import java.time.LocalDateTime;
  * Standard error response object that will be returned to clients
  * when an exception occurs.
  */
+@Setter
+@Getter
 public class ErrorResponse {
+    // Getters and setters
     private HttpStatus status;
     private int statusCode;
     private String message;
@@ -33,45 +38,5 @@ public class ErrorResponse {
         this(status, message);
         this.path = path;
     }
-    
-    // Getters and setters
-    public HttpStatus getStatus() {
-        return status;
-    }
-    
-    public void setStatus(HttpStatus status) {
-        this.status = status;
-    }
-    
-    public int getStatusCode() {
-        return statusCode;
-    }
-    
-    public void setStatusCode(int statusCode) {
-        this.statusCode = statusCode;
-    }
-    
-    public String getMessage() {
-        return message;
-    }
-    
-    public void setMessage(String message) {
-        this.message = message;
-    }
-    
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-    
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-    
-    public String getPath() {
-        return path;
-    }
-    
-    public void setPath(String path) {
-        this.path = path;
-    }
+
 }

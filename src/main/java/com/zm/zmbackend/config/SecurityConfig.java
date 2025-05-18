@@ -23,7 +23,6 @@ import com.zm.zmbackend.oauth2.CustomOAuth2UserService;
 import com.zm.zmbackend.oauth2.OAuth2AuthenticationSuccessHandler;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Getter
 @Configuration

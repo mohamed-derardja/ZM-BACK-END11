@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         // Get the token from the request header
         String authHeader = request.getHeader("Authorization");
-        String token = null;
+        String token;
         Long userId = null;
         
         // Check if the Authorization header is present and has the Bearer prefix

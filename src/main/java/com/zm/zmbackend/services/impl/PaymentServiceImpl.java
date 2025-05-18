@@ -3,9 +3,12 @@ package com.zm.zmbackend.services.impl;
 import com.zm.zmbackend.entities.Payment;
 import com.zm.zmbackend.entities.PaymentMethodType;
 import com.zm.zmbackend.entities.Reservation;
+import com.zm.zmbackend.exceptions.ResourceNotFoundException;
 import com.zm.zmbackend.repositories.PaymentRepo;
 import com.zm.zmbackend.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,21 +32,33 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    public Page<Payment> getAllPaymentsPaged(Pageable pageable) {
+        return paymentRepo.findAll(pageable);
+    }
+
+    @Override
     public Optional<Payment> getPaymentById(Long id) {
         return paymentRepo.findById(id);
     }
 
     @Override
     public List<Payment> getPaymentsByUserId(Long userId) {
-        // This would require a custom method in the repository
-        // For now, we'll return all payments (in a real implementation, you'd add a findByUserId method)
-        return paymentRepo.findAll();
+        return paymentRepo.findByUserId(userId);
     }
 
+    @Override
+    public Page<Payment> getPaymentsByUserIdPaged(Long userId, Pageable pageable) {
+        return paymentRepo.findByUserId(userId, pageable);
+    }
+
+    @Override
     public List<Payment> getPaymentsByReservation(Reservation reservation) {
-        // This would require a custom method in the repository
-        // For now, we'll return all payments (in a real implementation, you'd add a findByReservation method)
-        return paymentRepo.findAll();
+        return paymentRepo.findByReservation(reservation);
+    }
+
+    @Override
+    public Page<Payment> getPaymentsByReservationPaged(Reservation reservation, Pageable pageable) {
+        return paymentRepo.findByReservation(reservation, pageable);
     }
 
     @Override
@@ -75,7 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Payment updatePayment(Long id, Payment payment) {
         if (!paymentRepo.existsById(id)) {
-            throw new RuntimeException("Payment not found with id: " + id);
+            throw new ResourceNotFoundException("Payment", "id", id);
         }
         payment.setId(id);
         return paymentRepo.save(payment);
@@ -84,7 +99,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void deletePayment(Long id) {
         if (!paymentRepo.existsById(id)) {
-            throw new RuntimeException("Payment not found with id: " + id);
+            throw new ResourceNotFoundException("Payment", "id", id);
         }
         paymentRepo.deleteById(id);
     }
