@@ -6,6 +6,8 @@ import com.zm.zmbackend.repositories.CarRepo;
 import com.zm.zmbackend.repositories.ReservationRepo;
 import com.zm.zmbackend.services.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -27,6 +29,11 @@ public class CarServiceImpl implements CarService {
     @Override
     public List<Car> getAllCars() {
         return carRepo.findAll();
+    }
+
+    @Override
+    public Page<Car> getAllCarsPaged(Pageable pageable) {
+        return carRepo.findAll(pageable);
     }
 
     @Override
@@ -59,6 +66,26 @@ public class CarServiceImpl implements CarService {
     @Override
     public List<Car> getAvailableCars() {
         return carRepo.findByRentalStatus("Available");
+    }
+
+    @Override
+    public Page<Car> getAvailableCarsPaged(Pageable pageable) {
+        return carRepo.findByRentalStatus("Available", pageable);
+    }
+
+    @Override
+    public Page<Car> getCarsByBrandPaged(String brand, Pageable pageable) {
+        return carRepo.findByBrand(brand, pageable);
+    }
+
+    @Override
+    public Page<Car> getCarsByModelPaged(String model, Pageable pageable) {
+        return carRepo.findByModel(model, pageable);
+    }
+
+    @Override
+    public Page<Car> getCarsByRatingRangePaged(Long minRating, Long maxRating, Pageable pageable) {
+        return carRepo.findByRatingBetween(minRating, maxRating, pageable);
     }
 
     @Override

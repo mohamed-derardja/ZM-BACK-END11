@@ -1,14 +1,20 @@
 package com.zm.zmbackend.services;
 
 import com.zm.zmbackend.entities.Car;
+import com.zm.zmbackend.entities.Payment;
+import com.zm.zmbackend.entities.PaymentMethodType;
 import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.entities.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
     // Basic CRUD operations with authorization
     List<User> getAllUsers();
+    Page<User> getAllUsersPaged(Pageable pageable);
     Optional<User> getUserById(Long id);
     Optional<User> getUserByEmail(String email);
     User createUser(User user);
@@ -33,7 +39,6 @@ public interface UserService {
 
     // Verification
     boolean verifyEmail(Long userId, String verificationCode);
-    boolean verifyPhone(Long userId, String verificationCode);
     String generateEmailVerificationCode(Long userId);
 
     // Token management
@@ -46,4 +51,15 @@ public interface UserService {
 
     // Password verification
     boolean verifyPassword(String rawPassword, String encodedPassword);
+
+    // Payment methods (integrated from PaymentService)
+    List<Payment> getAllPayments();
+    Optional<Payment> getPaymentById(Long id);
+    List<Payment> getPaymentsByUserId(Long userId);
+    List<Payment> getPaymentsByReservation(Reservation reservation);
+    Payment createPayment(Payment payment);
+    Payment createReservationPayment(Reservation reservation, BigDecimal amount);
+    Payment createReservationPayment(Reservation reservation, BigDecimal amount, PaymentMethodType paymentMethod);
+    Payment updatePayment(Long id, Payment payment);
+    void deletePayment(Long id);
 }

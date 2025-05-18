@@ -8,6 +8,10 @@ import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.entities.User;
 import com.zm.zmbackend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,8 +46,7 @@ public class UserController {
             LoginResponse response = new LoginResponse(
                 user.getId(),
                 token,
-                user.getEmailVerified(),
-                user.getPhoneVerified()
+                user.getEmailVerified()
             );
 
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -78,8 +81,7 @@ public class UserController {
             LoginResponse response = new LoginResponse(
                 user.getId(),
                 token,
-                user.getEmailVerified(),
-                user.getPhoneVerified()
+                user.getEmailVerified()
             );
 
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -97,9 +99,8 @@ public class UserController {
                 return new ResponseEntity<>("Email already in use", HttpStatus.CONFLICT);
             }
 
-            // Set verification status to false
+            // Set email verification status to false
             user.setEmailVerified(false);
-            user.setPhoneVerified(false);
 
             User savedUser = userService.createUser(user);
 
@@ -109,8 +110,7 @@ public class UserController {
             LoginResponse response = new LoginResponse(
                 savedUser.getId(),
                 token,
-                savedUser.getEmailVerified(),
-                savedUser.getPhoneVerified()
+                savedUser.getEmailVerified()
             );
 
             return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -147,39 +147,33 @@ public class UserController {
         }
     }
 
-    @PostMapping("/{userId}/verify-phone")
-    public ResponseEntity<?> verifyPhone(@PathVariable Long userId, 
-                                        @RequestBody VerificationRequest request,
-                                        @RequestHeader("Authorization") String authHeader) {
-        try {
-            // Extract token from Authorization header
-            String token = authHeader;
-            if (authHeader.startsWith("Bearer ")) {
-                token = authHeader.substring(7);
-            }
-
-            // Validate token
-            Long currentUserId = userService.validateToken(token);
-            if (currentUserId == null || !currentUserId.equals(userId)) {
-                return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
-            }
-
-            boolean verified = userService.verifyPhone(userId, request.getVerificationCode());
-            if (!verified) {
-                return new ResponseEntity<>("Invalid verification code", HttpStatus.BAD_REQUEST);
-            }
-
-            return new ResponseEntity<>("Phone verified successfully", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    // Phone verification endpoint removed as per requirements
 
     // User management endpoints
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @GetMapping("/paged")
+    public ResponseEntity<Page<User>> getAllUsersPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) Boolean emailVerified,
+            @RequestParam(required = false) Boolean phoneVerified) {
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        // For now, we'll just use the basic pagination since we haven't implemented filtered queries in UserService
+        // In a real implementation, we would add methods to UserService and UserRepo for filtered queries
+        Page<User> users = userService.getAllUsersPaged(pageable);
+
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 

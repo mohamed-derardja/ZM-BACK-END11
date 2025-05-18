@@ -9,5 +9,5 @@ public class LoginResponse {
     private Long userId;
     private String token;
     private boolean emailVerified;
-    private boolean phoneVerified;
+    // Phone verification removed as per requirements
 }

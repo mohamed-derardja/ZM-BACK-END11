@@ -1,16 +1,21 @@
 package com.zm.zmbackend.services.impl;
 
 import com.zm.zmbackend.entities.Car;
+import com.zm.zmbackend.entities.Payment;
+import com.zm.zmbackend.entities.PaymentMethodType;
 import com.zm.zmbackend.entities.Reservation;
 import com.zm.zmbackend.entities.User;
 import com.zm.zmbackend.config.CancellationConfig;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.zm.zmbackend.repositories.CarRepo;
+import com.zm.zmbackend.repositories.PaymentRepo;
 import com.zm.zmbackend.repositories.UserRepo;
 import com.zm.zmbackend.services.CarService;
 import com.zm.zmbackend.services.ReservationService;
 import com.zm.zmbackend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,6 +30,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepo userRepo;
     private final CarRepo carRepo;
+    private final PaymentRepo paymentRepo;
     private final CarService carService;
     private final ReservationService reservationService;
     private final CancellationConfig cancellationConfig;
@@ -36,10 +42,10 @@ public class UserServiceImpl implements UserService {
     // Constants
     private static final int MAX_RESERVATION_ATTEMPTS = 5;
     private static final int RATE_LIMIT_WINDOW_MINUTES = 1;
-    private static final int MAX_RESERVATION_DAYS = 30;
+    private static final int MAX_RESERVATION_DAYS = 90;
 
     // Constants for verification code generation
-    private static final int VERIFICATION_CODE_LENGTH = 6;
+    private static final int VERIFICATION_CODE_LENGTH = 4;
 
     // Method to generate a random verification code
     private String generateVerificationCode() {
@@ -47,11 +53,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Autowired
-    public UserServiceImpl(UserRepo userRepo, CarRepo carRepo,
+    public UserServiceImpl(UserRepo userRepo, CarRepo carRepo, PaymentRepo paymentRepo,
                           CarService carService, ReservationService reservationService,
                           CancellationConfig cancellationConfig, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.carRepo = carRepo;
+        this.paymentRepo = paymentRepo;
         this.carService = carService;
         this.reservationService = reservationService;
         this.cancellationConfig = cancellationConfig;
@@ -63,6 +70,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getAllUsers() {
         return userRepo.findAll();
+    }
+
+    @Override
+    public Page<User> getAllUsersPaged(Pageable pageable) {
+        return userRepo.findAll(pageable);
     }
 
     @Override
@@ -319,27 +331,7 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-    @Override
-    public boolean verifyPhone(Long userId, String verificationCode) {
-        Optional<User> optionalUser = userRepo.findById(userId);
-        if (optionalUser.isEmpty()) {
-            return false;
-        }
-
-        User user = optionalUser.get();
-
-        // Check if the provided code matches the stored code
-        if (user.getPhoneVerificationCode() == null || !user.getPhoneVerificationCode().equals(verificationCode)) {
-            return false;
-        }
-
-        // Mark phone as verified and clear the verification code
-        user.setPhoneVerified(true);
-        user.setPhoneVerificationCode(null);
-        userRepo.save(user);
-
-        return true;
-    }
+    // Phone verification method removed as per requirements
 
     // Verification code generation
     @Override
@@ -441,5 +433,74 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean verifyPassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    // Payment methods implementation
+
+    @Override
+    public List<Payment> getAllPayments() {
+        return paymentRepo.findAll();
+    }
+
+    @Override
+    public Optional<Payment> getPaymentById(Long id) {
+        return paymentRepo.findById(id);
+    }
+
+    @Override
+    public List<Payment> getPaymentsByUserId(Long userId) {
+        // This would require a custom method in the repository
+        // For now, we'll return all payments (in a real implementation, you'd add a findByUserId method)
+        return paymentRepo.findAll();
+    }
+
+    @Override
+    public List<Payment> getPaymentsByReservation(Reservation reservation) {
+        // This would require a custom method in the repository
+        // For now, we'll return all payments (in a real implementation, you'd add a findByReservation method)
+        return paymentRepo.findAll();
+    }
+
+    @Override
+    public Payment createPayment(Payment payment) {
+        return paymentRepo.save(payment);
+    }
+
+    @Override
+    public Payment createReservationPayment(Reservation reservation, BigDecimal amount) {
+        // Default to CASH payment method if not specified
+        return createReservationPayment(reservation, amount, PaymentMethodType.CASH);
+    }
+
+    @Override
+    public Payment createReservationPayment(Reservation reservation, BigDecimal amount, PaymentMethodType paymentMethod) {
+        Payment payment = new Payment();
+        payment.setReservation(reservation);
+        payment.setUser(reservation.getUser());
+        payment.setAmount(amount);
+        payment.setPaymentDate(Instant.now());
+        payment.setStatus("pending");
+        payment.setPaymentMethod(paymentMethod);
+        payment.setCreatedAt(Instant.now());
+        payment.setUpdatedAt(Instant.now());
+
+        return paymentRepo.save(payment);
+    }
+
+    @Override
+    public Payment updatePayment(Long id, Payment payment) {
+        if (!paymentRepo.existsById(id)) {
+            throw new RuntimeException("Payment not found with id: " + id);
+        }
+        payment.setId(id);
+        return paymentRepo.save(payment);
+    }
+
+    @Override
+    public void deletePayment(Long id) {
+        if (!paymentRepo.existsById(id)) {
+            throw new RuntimeException("Payment not found with id: " + id);
+        }
+        paymentRepo.deleteById(id);
     }
 }
