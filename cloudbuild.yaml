@@ -1,0 +1,36 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/store', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/store']
+  
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'store'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/store'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--add-cloudsql-instances'
+      - '${_CLOUD_SQL_CONNECTION_NAME}'
+      - '--set-env-vars'
+      - 'CLOUD_SQL_CONNECTION_NAME=${_CLOUD_SQL_CONNECTION_NAME},DB_USERNAME=${_DB_USERNAME},DB_PASSWORD=${_DB_PASSWORD},GOOGLE_CLIENT_ID=${_GOOGLE_CLIENT_ID},GOOGLE_CLIENT_SECRET=${_GOOGLE_CLIENT_SECRET},FACEBOOK_CLIENT_ID=${_FACEBOOK_CLIENT_ID},FACEBOOK_CLIENT_SECRET=${_FACEBOOK_CLIENT_SECRET},EMAIL_USERNAME=${_EMAIL_USERNAME},EMAIL_PASSWORD=${_EMAIL_PASSWORD}'
+      - '--memory'
+      - '512Mi'
+      - '--timeout'
+      - '300s'
+      - '--min-instances'
+      - '1'
+
+images:
+  - 'gcr.io/$PROJECT_ID/store' 
