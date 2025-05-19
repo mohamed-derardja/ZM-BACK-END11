@@ -1,0 +1,20 @@
+ALTER TABLE car
+    ADD fuel LONGTEXT DEFAULT 'Petrol' NULL;
+
+ALTER TABLE car
+    ADD rental_status LONGTEXT DEFAULT 'Available' NULL;
+
+ALTER TABLE car
+    ADD transmission LONGTEXT DEFAULT 'Manual' NULL;
+
+ALTER TABLE car
+    MODIFY fuel LONGTEXT NOT NULL;
+
+ALTER TABLE car
+    MODIFY rental_status LONGTEXT NOT NULL;
+
+ALTER TABLE car
+    MODIFY transmission LONGTEXT NOT NULL;
+
+ALTER TABLE car
+    ALTER `Condition` SET DEFAULT 'Mint';
