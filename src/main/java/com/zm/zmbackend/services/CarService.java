@@ -11,9 +11,6 @@ public interface CarService {
     List<Car> getAllCars();
     Page<Car> getAllCarsPaged(Pageable pageable);
     Optional<Car> getCarById(Long id);
-    Car createCar(Car car);
-    Car updateCar(Long id, Car car);
-    void deleteCar(Long id);
 
     // Business logic methods
     List<Car> getAvailableCars();

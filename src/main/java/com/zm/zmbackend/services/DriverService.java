@@ -10,13 +10,14 @@ import java.util.Optional;
 public interface DriverService {
     List<Driver> getAllDrivers();
     Page<Driver> getAllDriversPaged(Pageable pageable);
-
     Optional<Driver> getDriverById(Long id);
-    Driver createDriver(Driver driver);
-    Driver updateDriver(Long id, Driver driver);
-    void deleteDriver(Long id);
 
     // Business logic methods
     boolean isDriverAvailable(Long driverId, Instant startDate, Instant endDate);
+
+    // Method to check if a driver is generally available (without date constraints)
+    boolean isDriverAvailable(Long driverId);
+
+    // Method to update driver availability (for internal use by ReservationService)
     void updateDriverAvailability(Long driverId, Boolean availability);
 }

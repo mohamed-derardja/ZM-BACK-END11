@@ -40,29 +40,4 @@ public class GalleryController {
         return new ResponseEntity<>(galleries, HttpStatus.OK);
     }
 
-    @PostMapping
-    public ResponseEntity<Gallery> createGallery(@RequestBody Gallery gallery) {
-        Gallery savedGallery = galleryService.createGallery(gallery);
-        return new ResponseEntity<>(savedGallery, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Gallery> updateGallery(@PathVariable Long id, @RequestBody Gallery gallery) {
-        try {
-            Gallery updatedGallery = galleryService.updateGallery(id, gallery);
-            return new ResponseEntity<>(updatedGallery, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGallery(@PathVariable Long id) {
-        try {
-            galleryService.deleteGallery(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 }

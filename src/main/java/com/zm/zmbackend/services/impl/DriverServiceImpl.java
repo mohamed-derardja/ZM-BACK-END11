@@ -43,28 +43,6 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public Driver createDriver(Driver driver) {
-        return driverRepo.save(driver);
-    }
-
-    @Override
-    public Driver updateDriver(Long id, Driver driver) {
-        if (!driverRepo.existsById(id)) {
-            throw new ResourceNotFoundException("Driver", "id", id);
-        }
-        driver.setId(id);
-        return driverRepo.save(driver);
-    }
-
-    @Override
-    public void deleteDriver(Long id) {
-        if (!driverRepo.existsById(id)) {
-            throw new ResourceNotFoundException("Driver", "id", id);
-        }
-        driverRepo.deleteById(id);
-    }
-
-    @Override
     public boolean isDriverAvailable(Long driverId, Instant startDate, Instant endDate) {
         Optional<Driver> optionalDriver = driverRepo.findById(driverId);
         if (optionalDriver.isEmpty()) {
@@ -76,9 +54,25 @@ public class DriverServiceImpl implements DriverService {
             return false;
         }
 
+        // If no dates are provided, just check the driver's general availability
+        if (startDate == null || endDate == null) {
+            return driver.getAvailability() && "Active".equals(driver.getStatus());
+        }
+
         // Check if there are any overlapping reservations
         List<Reservation> overlappingReservations = reservationRepo.findOverlappingReservationsForDriver(driverId, startDate, endDate);
         return overlappingReservations.isEmpty();
+    }
+
+    @Override
+    public boolean isDriverAvailable(Long driverId) {
+        Optional<Driver> optionalDriver = driverRepo.findById(driverId);
+        if (optionalDriver.isEmpty()) {
+            throw new ResourceNotFoundException("Driver", "id", driverId);
+        }
+
+        Driver driver = optionalDriver.get();
+        return driver.getAvailability() && "Active".equals(driver.getStatus());
     }
 
     @Override

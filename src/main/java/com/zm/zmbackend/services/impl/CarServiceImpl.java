@@ -42,27 +42,6 @@ public class CarServiceImpl implements CarService {
         return carRepo.findById(id);
     }
 
-    @Override
-    public Car createCar(Car car) {
-        return carRepo.save(car);
-    }
-
-    @Override
-    public Car updateCar(Long id, Car car) {
-        if (!carRepo.existsById(id)) {
-            throw new ResourceNotFoundException("Car", "id", id);
-        }
-        car.setId(id);
-        return carRepo.save(car);
-    }
-
-    @Override
-    public void deleteCar(Long id) {
-        if (!carRepo.existsById(id)) {
-            throw new ResourceNotFoundException("Car", "id", id);
-        }
-        carRepo.deleteById(id);
-    }
 
     @Override
     public List<Car> getAvailableCars() {

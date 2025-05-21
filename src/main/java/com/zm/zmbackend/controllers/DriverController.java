@@ -34,27 +34,11 @@ public class DriverController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping
-    public ResponseEntity<Driver> createDriver(@RequestBody Driver driver) {
-        Driver savedDriver = driverService.createDriver(driver);
-        return new ResponseEntity<>(savedDriver, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Driver> updateDriver(@PathVariable Long id, @RequestBody Driver driver) {
+    @GetMapping("/available/{id}")
+    public ResponseEntity<Boolean> isDriverAvailable(@PathVariable Long id) {
         try {
-            Driver updatedDriver = driverService.updateDriver(id, driver);
-            return new ResponseEntity<>(updatedDriver, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDriver(@PathVariable Long id) {
-        try {
-            driverService.deleteDriver(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            boolean isAvailable = driverService.isDriverAvailable(id);
+            return new ResponseEntity<>(isAvailable, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
