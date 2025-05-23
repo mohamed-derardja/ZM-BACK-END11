@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${RDS_HOSTNAME:localhost}:${RDS_PORT:3306}/${RDS_DB_NAME:zm_data_base}
+    username: ${RDS_USERNAME:root}
+    password: ${RDS_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+server:
+  port: ${PORT:5000}
+  servlet:
+    context-path: / 
